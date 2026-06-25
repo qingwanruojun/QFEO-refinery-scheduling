@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+*.aux
+*.log
+*.out
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+.DS_Store
+.env
+*.csv
+!results_main.csv
