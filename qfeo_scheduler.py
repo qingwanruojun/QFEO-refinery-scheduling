@@ -448,8 +448,11 @@ class KaiwuEngine:
         return ((raw + 1) // 2).astype(int)
 
 
-def make_qfeo_engine():
-    """创建QFEO求解引擎。优先级：DWavePathIntegral > KaiwuCIM > NumpySA。"""
+def make_qfeo_engine(force_sa=False):
+    """Create QFEO engine. force_sa=True uses NumPy SA (for comparison)."""
+    if force_sa:
+        print("  Engine: NumPy SA (comparison mode)")
+        return NumpySAEngine()
     try:
         import dimod, dwave.samplers
         _ = dwave.samplers.PathIntegralAnnealingSampler()
@@ -942,20 +945,15 @@ def format_runtime(runtime):
 
 # ====================== 主实验函数 ======================
 def run_experiment(T_days=360, block_size=30, flex_mode=False,
-                   csv_path=None, tag=""):
-    """主实验：四个场景 × {Gurobi, GA, PSO, MTCEA, RL, QFEO}，统一 flex_mode。
-
-    为满足审稿关于"公平对比"的要求，所有方法共享同一 flex_mode 设置：
-    - flex_mode=False：ϕ=1.0，无柔性成本（纯模式切换对比，默认）
-    - flex_mode=True ：ϕ=1.12，全部方法都扣柔性成本（带柔性增强对比）
-    """
+                   csv_path=None, tag="", force_sa=False):
+    """Run main experiment across 7 scenarios with all baselines."""
     global BLOCK_SIZE, NUM_BLOCKS, T
     T = T_days
     BLOCK_SIZE = block_size
     NUM_BLOCKS = T_days // BLOCK_SIZE
     init_data(use_real_brent=True, T_days=T_days)
 
-    engine = make_qfeo_engine()
+    engine = make_qfeo_engine(force_sa=force_sa)
     scenarios = [get_scenario_config(i) for i in range(7)]
 
     mode_tag = "flex=True(ϕ=1.12)" if flex_mode else "flex=False(ϕ=1.0)"
